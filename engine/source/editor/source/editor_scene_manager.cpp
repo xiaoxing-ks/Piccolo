@@ -65,26 +65,25 @@ namespace Piccolo
         }
         else
         {
-            Matrix4x4 model_matrix = selected_aixs->m_model_matrix;
-            Vector3 model_scale;
+            Matrix4x4  model_matrix = selected_aixs->m_model_matrix;
+            Vector3    model_scale;
             Quaternion model_rotation;
-            Vector3 model_translation;
+            Vector3    model_translation;
             model_matrix.decomposition(model_translation, model_scale, model_rotation);
-            float     window_forward   = game_engine_window_size.y / 2.0f / Math::tan(Math::degreesToRadians(camera_fov) / 2.0f);
+            float window_forward =
+                game_engine_window_size.y / 2.0f / Math::tan(Math::degreesToRadians(camera_fov) / 2.0f);
             Vector2 screen_center_uv = Vector2(cursor_uv.x, 1 - cursor_uv.y) - Vector2(0.5, 0.5);
-            Vector3 world_ray_dir =
-                camera_forward * window_forward +
-                camera_right * (float)game_engine_window_size.x * screen_center_uv.x +
-                camera_up * (float)game_engine_window_size.y * screen_center_uv.y;
+            Vector3 world_ray_dir    = camera_forward * window_forward +
+                                    camera_right * (float)game_engine_window_size.x * screen_center_uv.x +
+                                    camera_up * (float)game_engine_window_size.y * screen_center_uv.y;
 
-            Vector4 local_ray_origin =
-                model_matrix.inverse() * Vector4(camera_position, 1.0f);
-            Vector3 local_ray_origin_xyz = Vector3(local_ray_origin.x, local_ray_origin.y, local_ray_origin.z);
-            Quaternion inversed_rotation = model_rotation.inverse();
+            Vector4    local_ray_origin     = model_matrix.inverse() * Vector4(camera_position, 1.0f);
+            Vector3    local_ray_origin_xyz = Vector3(local_ray_origin.x, local_ray_origin.y, local_ray_origin.z);
+            Quaternion inversed_rotation    = model_rotation.inverse();
             inversed_rotation.normalise();
-            Vector3 local_ray_dir        = inversed_rotation * world_ray_dir;
+            Vector3 local_ray_dir = inversed_rotation * world_ray_dir;
 
-            Vector3 plane_normals[3] = { Vector3(1, 0, 0), Vector3(0, 1, 0), Vector3(0, 0, 1)};
+            Vector3 plane_normals[3] = {Vector3(1, 0, 0), Vector3(0, 1, 0), Vector3(0, 0, 1)};
 
             float plane_view_depth[3] = {intersectPlaneRay(plane_normals[0], 0, local_ray_origin_xyz, local_ray_dir),
                                          intersectPlaneRay(plane_normals[1], 0, local_ray_origin_xyz, local_ray_dir),
@@ -111,11 +110,12 @@ namespace Piccolo
                     float cos_alpha          = local_ray_dir_proj / 1.0f; // local_ray_dir_proj / local_ray_dir.length
                     if (cos_alpha <= 0.15)                                // cos(80deg)~cps(100deg)
                     {
-                        int   index00   = (i + 1) % 3;
-                        int   index01   = 3 - i - index00;
-                        int   index10   = (i + 2) % 3;
-                        int   index11   = 3 - i - index10;
-                        float axis_dist = (Math::abs(intersect_pt[index00][i]) + Math::abs(intersect_pt[index10][i])) / 2;
+                        int   index00 = (i + 1) % 3;
+                        int   index01 = 3 - i - index00;
+                        int   index10 = (i + 2) % 3;
+                        int   index11 = 3 - i - index10;
+                        float axis_dist =
+                            (Math::abs(intersect_pt[index00][i]) + Math::abs(intersect_pt[index10][i])) / 2;
                         if (axis_dist > DIST_THRESHOLD) // too far from axis
                         {
                             continue;
@@ -147,8 +147,7 @@ namespace Piccolo
                     {
                         int   index0 = (i + 1) % 3;
                         int   index1 = (i + 2) % 3;
-                        float dist =
-                            Math::sqr(intersect_pt[index0][index1]) + Math::sqr(intersect_pt[index1][index0]);
+                        float dist = Math::sqr(intersect_pt[index0][index1]) + Math::sqr(intersect_pt[index1][index0]);
                         if ((intersect_pt[index0][i] > EDGE_OF_AXIS_MIN) &&
                             (intersect_pt[index0][i] < EDGE_OF_AXIS_MAX) && (dist < DIST_THRESHOLD) &&
                             (dist < min_dist))

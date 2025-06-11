@@ -112,7 +112,7 @@ void JobSystemThreadPool::BarrierImpl::AddJob(const JobHandle &inJob)
 		while (write_index - mJobReadIndex >= cMaxJobs)
 		{
 			JPH_ASSERT(false, "Barrier full, stalling!");
-			this_thread::sleep_for(100us);
+			this_thread::sleep_for(std::chrono::microseconds(100));
 		}
 		mJobs[write_index & (cMaxJobs - 1)] = job;
 	}
@@ -148,7 +148,7 @@ void JobSystemThreadPool::BarrierImpl::AddJobs(const JobHandle *inHandles, uint 
 			while (write_index - mJobReadIndex >= cMaxJobs)
 			{
 				JPH_ASSERT(false, "Barrier full, stalling!");
-				this_thread::sleep_for(100us);
+				this_thread::sleep_for(std::chrono::microseconds(100));
 			}
 			mJobs[write_index & (cMaxJobs - 1)] = job;
 		}
@@ -181,7 +181,7 @@ void JobSystemThreadPool::BarrierImpl::Wait()
 
 				// Loop through the jobs and erase jobs from the beginning of the list that are done
 				while (mJobReadIndex < mJobWriteIndex)
-				{				
+				{
 					atomic<Job *> &job = mJobs[mJobReadIndex & (cMaxJobs - 1)];
 					Job *job_ptr = job.load();
 					if (job_ptr == nullptr || !job_ptr->IsDone())
@@ -218,7 +218,7 @@ void JobSystemThreadPool::BarrierImpl::Wait()
 
 	// All jobs should be done now, release them
 	while (mJobReadIndex < mJobWriteIndex)
-	{				
+	{
 		atomic<Job *> &job = mJobs[mJobReadIndex & (cMaxJobs - 1)];
 		Job *job_ptr = job.load();
 		JPH_ASSERT(job_ptr != nullptr && job_ptr->IsDone());
@@ -345,13 +345,13 @@ JobHandle JobSystemThreadPool::CreateJob(const char *inJobName, ColorArg inColor
 		if (index != AvailableJobs::cInvalidObjectIndex)
 			break;
 		JPH_ASSERT(false, "No jobs available!");
-		this_thread::sleep_for(100us);
+		this_thread::sleep_for(std::chrono::microseconds(100));
 	}
 	Job *job = &mJobs.Get(index);
-	
+
 	// Construct handle to keep a reference, the job is queued below and may immediately complete
 	JobHandle handle(job);
-	
+
 	// If there are no dependencies, queue the job now
 	if (inNumDependencies == 0)
 		QueueJob(job);
@@ -429,15 +429,15 @@ void JobSystemThreadPool::QueueJobInternal(Job *inJob)
 			// We calculated the head outside of the loop, update head (and we also need to update tail to prevent it from passing head)
 			head = GetHead();
 			old_value = mTail;
-	
+
 			// Second check if there's space in the queue
 			if (old_value - head >= cQueueLength)
 			{
 				// Wake up all threads in order to ensure that they can clear any nullptrs they may not have processed yet
-				mSemaphore.Release((uint)mThreads.size()); 
+				mSemaphore.Release((uint)mThreads.size());
 
 				// Sleep a little (we have to wait for other threads to update their head pointer in order for us to be able to continue)
-				this_thread::sleep_for(100us);
+				this_thread::sleep_for(std::chrono::microseconds(100));
 				continue;
 			}
 		}
@@ -446,7 +446,7 @@ void JobSystemThreadPool::QueueJobInternal(Job *inJob)
 		Job *expected_job = nullptr;
 		bool success = mQueue[old_value & (cQueueLength - 1)].compare_exchange_strong(expected_job, inJob);
 
-		// Regardless of who wrote the slot, we will update the tail (if the successful thread got scheduled out 
+		// Regardless of who wrote the slot, we will update the tail (if the successful thread got scheduled out
 		// after writing the pointer we still want to be able to continue)
 		mTail.compare_exchange_strong(old_value, old_value + 1);
 

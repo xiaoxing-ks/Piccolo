@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.29.7 FATAL_ERROR)
 
 project(JoltPhysics CXX)
 
